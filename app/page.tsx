@@ -29,7 +29,7 @@ const COLORS = {
 };
 
 // --- HELPER FUNCTION ---
-const getWaLink = (message) => {
+const getWaLink = (message: string) => {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 };
 
@@ -224,7 +224,7 @@ const Chatbot = () => {
                   </ReactMarkdown>
                 </div>
               </div>
-              
+
             ))}
             {isLoading && (
               <div className="bg-white border border-gray-200 text-gray-500 self-start p-3 rounded-xl rounded-bl-none text-sm flex gap-1 shadow-sm">
