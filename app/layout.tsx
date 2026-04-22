@@ -13,6 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: '/logo.ico',
+  },
   title: "Salamah Farm - Peternakan Qurban Solo", // <--- Ganti tulisan ini
   description: "Pusat penyedia hewan Qurban terpercaya, amanah, dan sesuai syariat di Solo Raya.", // <--- Ganti penjelasan ini
 };

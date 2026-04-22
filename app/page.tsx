@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { 
   MessageCircle, 
   MapPin, 
@@ -21,7 +20,7 @@ import {
 } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const WA_NUMBER = "6281221595529"; // Nomor WhatsApp resmi Salamah Farm
+const WA_NUMBER = "6281210434927"; // Nomor WhatsApp resmi Salamah Farm
 const COLORS = {
   primary: '#1F7A63',   // Deep Green
   secondary: '#F5E6CA', // Warm Beige
@@ -36,19 +35,12 @@ const getWaLink = (message: string) => {
 // --- COMPONENTS ---
 
 // 1. Logo Component
-const Logo = () => (
-  <div className="flex items-center gap-2">
-    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="100" rx="20" fill={COLORS.primary}/>
-      <path d="M50 80C66.5685 80 80 66.5685 80 50C80 33.4315 66.5685 20 50 20C33.4315 20 20 33.4315 20 50C20 66.5685 33.4315 80 50 80Z" stroke={COLORS.accent} strokeWidth="4" strokeDasharray="8 4"/>
-      <path d="M50 70C61.0457 70 70 61.0457 70 50C70 41.6575 64.8872 34.5054 57.5 31.5C59.0838 34.4005 60 37.6627 60 41.1111C60 52.1568 51.0457 61.1111 40 61.1111C36.5516 61.1111 33.2894 60.1949 30.3889 58.6111C33.3945 66.0028 40.5466 71.1111 48.9348 71.1111C49.2882 71.1111 49.6429 71.0739 50 70Z" fill={COLORS.accent}/>
-      <path d="M38 35C38 35 45 35 45 42C45 35 52 35 52 35C52 35 45 35 45 28C45 35 38 35 38 35Z" fill={COLORS.secondary}/>
-    </svg>
-    <div>
-      <h1 className="text-xl md:text-2xl font-bold leading-none tracking-tight" style={{ color: COLORS.primary }}>Salamah</h1>
-      <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: COLORS.accent }}>Farm</span>
-    </div>
-  </div>
+const Logo = ({ inFooter = false }) => (
+  <img 
+    src="logo.jpeg" 
+    alt="Logo Salamah Farm" 
+    className={`object-contain transition-transform hover:scale-105 ${inFooter ? 'h-24' : 'h-16 md:h-20'} ${!inFooter ? 'mix-blend-multiply' : ''}`}
+  />
 );
 
 // 2. Floating WhatsApp Button
@@ -80,7 +72,7 @@ const Navbar = () => {
   return (
     <nav className="fixed w-full z-40 top-0 bg-white shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
+        <div className="flex justify-between h-24">
           <div className="flex items-center">
             <a href="#home"><Logo /></a>
           </div>
@@ -162,10 +154,7 @@ const Chatbot = () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: userMessage.text,
-          history: messages
-        })
+        body: JSON.stringify({ message: userMessage.text })
       });
 
       if (!response.ok) throw new Error('Gagal menghubungi server');
@@ -209,22 +198,9 @@ const Chatbot = () => {
           {/* Messages Area */}
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3">
             {messages.map((msg, idx) => (
-              <div 
-                key={idx} 
-                className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed shadow-sm ${
-                  msg.role === 'user' 
-                    ? 'bg-[#1F7A63] text-white self-end rounded-br-none' 
-                    : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-none'
-                }`}
-              >
-                
-                <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''}`}>
-                  <ReactMarkdown>
-                    {msg.text}
-                  </ReactMarkdown>
-                </div>
+              <div key={idx} className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-[#1F7A63] text-white self-end rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-none'}`}>
+                {msg.text}
               </div>
-
             ))}
             {isLoading && (
               <div className="bg-white border border-gray-200 text-gray-500 self-start p-3 rounded-xl rounded-bl-none text-sm flex gap-1 shadow-sm">
@@ -291,13 +267,13 @@ export default function App() {
   const steps = [
     { num: "01", title: "Pilih Hewan", desc: "Lihat katalog kami atau konsultasi via WhatsApp untuk memilih hewan yang sesuai budget & kebutuhan." },
     { num: "02", title: "Pembayaran", desc: "Lakukan pembayaran DP atau Lunas secara aman. Kami akan mengirimkan bukti tanda terima." },
-    { num: "03", title: "Perawatan Gratis", desc: "Hewan dititipkan dan dirawat dengan pakan terbaik di kandang kami tanpa biaya tambahan hingga hari H." },
+    { num: "03", title: "Perawatan Gratis", desc: "Hewan dititipkan dan dirawat dengan pakan terbaik di lokasi kami tanpa biaya tambahan hingga hari H." },
     { num: "04", title: "Pengiriman / Potong", desc: "Hewan dikirim ke lokasi Anda (Gratis Ongkir Solo Raya) atau dipotong di tempat kami sesuai syariat." }
   ];
 
   const faqs = [
     { q: "Apakah hewan qurban di Salamah Farm sesuai syariat?", a: "Tentu. Semua hewan qurban kami telah diperiksa kesehatannya, cukup umur (poel), tidak cacat, dan sah untuk dijadikan ibadah qurban." },
-    { q: "Apakah bisa memilih hewannya secara langsung?", a: "Sangat bisa! Kami mengundang Anda untuk datang langsung ke kandang kami di Solo untuk memilih hewan secara langsung. Atau bisa kami fotokan/videokan via WhatsApp." },
+    { q: "Apakah bisa memilih hewannya secara langsung?", a: "Sangat bisa! Kami mengundang Anda untuk datang ke lokasi penampungan kami di area Grogol, Sukoharjo untuk memilih hewan secara langsung. Atau bisa kami fotokan/videokan via WhatsApp." },
     { q: "Apakah ada biaya tambahan untuk pengiriman?", a: "Kami memberikan GRATIS ONGKIR untuk pengiriman hewan qurban ke wilayah Solo Raya (Surakarta, Sukoharjo, Karanganyar, Boyolali, dll)." },
     { q: "Bisakah dipotong di Salamah Farm lalu dagingnya disalurkan?", a: "Bisa. Kami melayani jasa pemotongan, pengemasan, hingga penyaluran ke pondok pesantren atau panti asuhan rekanan kami." },
   ];
@@ -311,7 +287,7 @@ export default function App() {
       <Chatbot />
 
       {/* 1. HERO SECTION */}
-      <section id="home" className="relative pt-28 pb-20 lg:pt-40 lg:pb-28 overflow-hidden bg-gradient-to-b from-[#e8f1ef] to-white">
+      <section id="home" className="relative pt-32 pb-20 lg:pt-44 lg:pb-28 overflow-hidden bg-gradient-to-b from-[#e8f1ef] to-white">
         {/* Decorative Islamic Pattern Background (Subtle) */}
         <div className="absolute inset-0 opacity-5 pointer-events-none" 
              style={{ backgroundImage: 'radial-gradient(#1F7A63 2px, transparent 2px)', backgroundSize: '40px 40px' }}>
@@ -320,10 +296,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             <div className="lg:w-1/2 text-center lg:text-left">
-              <span className="inline-block py-1 px-3 rounded-full text-sm font-semibold mb-6" style={{ backgroundColor: COLORS.secondary, color: COLORS.primary }}>
-                🌿 Peternakan Qurban Solo Raya
+              <span className="inline-block py-1.5 px-4 rounded-full text-sm font-bold tracking-wider mb-6 border shadow-sm bg-white" style={{ borderColor: COLORS.secondary, color: COLORS.primary }}>
+                RUMAH QURBAN SALAMAH FARM
               </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 text-gray-900">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 text-gray-900 tracking-tight">
                 Qurban Terpercaya, <br/>
                 <span style={{ color: COLORS.primary }}>Dirawat Sepenuh Hati.</span>
               </h1>
@@ -344,7 +320,7 @@ export default function App() {
               <div className="absolute inset-0 rounded-3xl transform translate-x-4 translate-y-4" style={{ backgroundColor: COLORS.secondary }}></div>
               <img 
                 src="https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&q=80&w=1000" 
-                alt="Peternakan Salamah Farm" 
+                alt="Rumah Qurban Salamah Farm" 
                 className="relative z-10 rounded-3xl object-cover w-full h-[400px] md:h-[500px] shadow-xl"
               />
               <div className="absolute -bottom-6 -left-6 z-20 bg-white p-4 rounded-xl shadow-xl flex items-center gap-4">
@@ -377,7 +353,7 @@ export default function App() {
                 <Leaf size={32} />
               </div>
               <h3 className="text-xl font-bold mb-2">Perawatan Alami</h3>
-              <p className="text-gray-600">Diberi pakan hijauan segar dan konsentrat bernutrisi di kandang yang bersih.</p>
+              <p className="text-gray-600">Diberi pakan hijauan segar dan konsentrat bernutrisi di tempat penampungan yang bersih.</p>
             </div>
             <div className="p-6 rounded-2xl text-center border border-gray-100 hover:shadow-lg transition-shadow bg-gray-50">
               <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: COLORS.secondary, color: COLORS.primary }}>
@@ -396,17 +372,17 @@ export default function App() {
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="md:w-1/2 order-2 md:order-1">
               <div className="grid grid-cols-2 gap-4">
-                <img src="https://images.unsplash.com/photo-1596733430284-f743727521a0?auto=format&fit=crop&q=80&w=400" alt="Peternakan" className="rounded-xl w-full h-48 object-cover shadow-md" />
+                <img src="https://images.unsplash.com/photo-1596733430284-f743727521a0?auto=format&fit=crop&q=80&w=400" alt="Penampungan Qurban" className="rounded-xl w-full h-48 object-cover shadow-md" />
                 <img src="https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&q=80&w=400" alt="Kambing" className="rounded-xl w-full h-48 object-cover shadow-md mt-8" />
               </div>
             </div>
             <div className="md:w-1/2 order-1 md:order-2">
               <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.primary }}>Tentang Salamah Farm</h2>
               <p className="text-gray-600 mb-6 text-lg leading-relaxed">
-                Berlokasi di Solo, Jawa Tengah, <strong>Salamah Farm</strong> hadir sebagai mitra terpercaya umat muslim dalam menunaikan ibadah Qurban. Kami memahami bahwa Qurban bukan sekadar menyembelih hewan, melainkan wujud ketaatan kepada Allah SWT.
+                Beroperasi khusus menyambut momen Idul Adha, <strong>Rumah Qurban Salamah Farm</strong> hadir di area Masjid Ali Bin Abi Thalib (Sukoharjo) sebagai mitra terpercaya umat muslim dalam menunaikan ibadah Qurban. Kami memahami bahwa Qurban bukan sekadar menyembelih hewan, melainkan wujud ketaatan kepada Allah SWT.
               </p>
               <p className="text-gray-600 mb-6 text-lg leading-relaxed">
-                Oleh karena itu, kami merawat setiap hewan dengan prinsip <em>Ihsan</em> (kebaikan). Mulai dari kebersihan kandang, kualitas pakan, hingga proses penyembelihan (jika diamanahkan kepada kami) dilakukan dengan profesional dan penuh adab Islami.
+                Oleh karena itu, kami merawat setiap hewan dengan prinsip <em>Ihsan</em> (kebaikan) selama masa penampungan. Mulai dari kebersihan tempat penampungan, kualitas pakan, hingga proses penyembelihan dilakukan dengan profesional dan penuh adab Islami.
               </p>
               <div className="flex gap-4 items-center">
                 <div className="flex flex-col">
@@ -429,7 +405,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: COLORS.primary }}>Pilihan Hewan Qurban</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Kami menyediakan berbagai pilihan berat dan ras hewan qurban. Hubungi kami untuk mendapatkan foto/video update terbaru dari kandang.</p>
+            <p className="text-gray-600 max-w-2xl mx-auto">Kami menyediakan berbagai pilihan berat dan ras hewan qurban. Hubungi kami untuk mendapatkan foto/video update terbaru dari lokasi kami.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -518,7 +494,7 @@ export default function App() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { name: "Bpk. Ahmad", loc: "Banjarsari, Solo", text: "Kambingnya besar dan sehat. Pelayanan ramah, kandang bersih. Sangat direkomendasikan untuk warga Solo!" },
+              { name: "Bpk. Ahmad", loc: "Banjarsari, Solo", text: "Kambingnya besar dan sehat. Pelayanan ramah, tempat penampungan bersih. Sangat direkomendasikan untuk warga Solo!" },
               { name: "Ibu Fatimah", loc: "Sukoharjo", text: "Alhamdulillah tahun lalu beli sapi rombongan di sini. Pengiriman tepat waktu hari H pagi, sapi tidak stres." },
               { name: "Mas Budi", loc: "Colomadu", text: "Praktis banget. Tinggal WA, dikasih video hewannya, bayar DP, langsung dirawat sampai Idul Adha. Terima kasih Salamah Farm." }
             ].map((review, i) => (
@@ -604,8 +580,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
             <div>
-              <div className="mb-6 bg-white inline-block p-2 rounded-xl">
-                <Logo />
+              <div className="mb-6 bg-white inline-block p-4 rounded-2xl shadow-xl">
+                <Logo inFooter={true} />
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
                 Pusat penyedia hewan Qurban terpercaya di Solo Raya. Mengedepankan prinsip Syariah, kualitas, dan pelayanan terbaik untuk kepuasan ibadah Anda.
@@ -617,29 +593,37 @@ export default function App() {
               <ul className="space-y-4 text-gray-400">
                 <li className="flex items-start gap-3">
                   <MapPin size={20} className="shrink-0 mt-1" style={{ color: COLORS.accent }} />
-                  <span>Jl. Peternakan Damai No. 123,<br/>Kec. Banjarsari, Kota Surakarta,<br/>Jawa Tengah 57135</span>
+                  <span>Masjid Ali Bin Abi Thalib,<br/>Sawah, Sanggrahan, Grogol,<br/>Kab. Sukoharjo, Jawa Tengah 57552</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone size={20} className="shrink-0" style={{ color: COLORS.accent }} />
-                  <span>0812-2159-5529</span>
+                  <span>+62 812-1043-4927</span>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Lokasi Kandang</h4>
-              {/* Placeholder untuk Google Maps Embed */}
-              <div className="w-full h-40 bg-gray-800 rounded-lg flex items-center justify-center text-gray-500 border border-gray-700">
-                [Google Maps Embed Placeholder]
+              <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Lokasi Rumah Qurban</h4>
+              <div className="w-full h-40 bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                <iframe 
+                  src="https://maps.google.com/maps?q=-7.592967682618572,110.80127866441777&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Lokasi Salamah Farm"
+                ></iframe>
               </div>
-              <a href="#" className="inline-flex items-center gap-1 mt-3 text-sm hover:text-white transition-colors" style={{ color: COLORS.accent }}>
+              <a href="https://maps.app.goo.gl/yFhpkq9DoLTNs2Xy6" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-sm hover:text-white transition-colors" style={{ color: COLORS.accent }}>
                 Buka di Google Maps <ArrowRight size={16} />
               </a>
             </div>
           </div>
           
           <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Salamah Farm Solo. All rights reserved.
+            &copy; {new Date().getFullYear()} Rumah Qurban Salamah Farm. All rights reserved.
           </div>
         </div>
       </footer>
