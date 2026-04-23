@@ -244,7 +244,7 @@ export default function App() {
       desc: 'Kambing Jawa / Randu pilihan, dirawat secara alami.',
       weight: '25 - 35 kg',
       price: 'Mulai Rp 2.500.000',
-      image: 'https://images.unsplash.com/photo-1524024973431-2ad916746881?auto=format&fit=crop&q=80&w=600',
+      image: '/image/kambing1.png',
     },
     {
       id: 'domba',
@@ -252,7 +252,7 @@ export default function App() {
       desc: 'Bulu lebat, daging tebal, sehat dan gesit.',
       weight: '30 - 45 kg',
       price: 'Mulai Rp 3.200.000',
-      image: 'https://images.unsplash.com/photo-1484557985045-edf25e08da73?auto=format&fit=crop&q=80&w=600',
+      image: '/image/domba2.png',
     },
     {
       id: 'sapi',
@@ -260,7 +260,7 @@ export default function App() {
       desc: 'Sapi Bali kualitas premium dengan persentase daging tinggi. Cocok untuk qurban rombongan (7 orang).',
       weight: '250 - 400 kg',
       price: 'Mulai Rp 18.000.000',
-      image: 'https://images.unsplash.com/photo-1546445317-29f4545e9d53?auto=format&fit=crop&q=80&w=600',
+      image: '/image/sapi2.png',
     }
   ];
 
@@ -319,7 +319,7 @@ export default function App() {
             <div className="lg:w-1/2 relative">
               <div className="absolute inset-0 rounded-3xl transform translate-x-4 translate-y-4" style={{ backgroundColor: COLORS.secondary }}></div>
               <img 
-                src="https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&q=80&w=1000" 
+                src="/image/home.png" 
                 alt="Rumah Qurban Salamah Farm" 
                 className="relative z-10 rounded-3xl object-cover w-full h-[400px] md:h-[500px] shadow-xl"
               />
@@ -370,12 +370,15 @@ export default function App() {
       <section id="about" className="py-20" style={{ backgroundColor: '#fcfaf8' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center gap-12">
-            <div className="md:w-1/2 order-2 md:order-1">
-              <div className="grid grid-cols-2 gap-4">
-                <img src="https://images.unsplash.com/photo-1596733430284-f743727521a0?auto=format&fit=crop&q=80&w=400" alt="Penampungan Qurban" className="rounded-xl w-full h-48 object-cover shadow-md" />
-                <img src="https://images.unsplash.com/photo-1560493676-04071c5f467b?auto=format&fit=crop&q=80&w=400" alt="Kambing" className="rounded-xl w-full h-48 object-cover shadow-md mt-8" />
-              </div>
+            <div className="md:w-1/2 order-2 md:order-1 relative group">
+              <div className="absolute inset-0 bg-[#F5E6CA] rounded-2xl transform translate-x-4 translate-y-4 transition-transform duration-300 group-hover:translate-x-2 group-hover:translate-y-2"></div>
+              <img 
+                src="/image/tentang-kami.png" // path lokal
+                alt="Peternakan Salamah Farm" 
+                className="relative z-10 rounded-3xl object-cover w-full h-[400px] md:h-[500px] shadow-xl" 
+              />
             </div>
+            
             <div className="md:w-1/2 order-1 md:order-2">
               <h2 className="text-3xl font-bold mb-4" style={{ color: COLORS.primary }}>Tentang Salamah Farm</h2>
               <p className="text-gray-600 mb-6 text-lg leading-relaxed">
