@@ -29,6 +29,10 @@ export async function POST(req) {
     // 3. Mulai Chat dengan History yang sudah rapi
     const chat = model.startChat({
       history: validHistory,
+      generationConfig: {
+        maxOutputTokens: 1000,
+        temperature: 0.7,
+      },
     });
 
     const result = await chat.sendMessage(systemPrompt + "\n\nUser: " + message);
