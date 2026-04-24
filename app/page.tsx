@@ -243,15 +243,15 @@ export default function App() {
       title: 'Kambing Qurban',
       desc: 'Kambing Jawa / Randu pilihan, dirawat secara alami.',
       weight: '25 - 35 kg',
-      price: 'Mulai Rp 2.500.000',
+      price: 'Mulai Rp 2.000.000',
       image: '/image/kambing1.png',
     },
     {
       id: 'domba',
-      title: 'Domba Merino / Garut',
+      title: 'Domba',
       desc: 'Bulu lebat, daging tebal, sehat dan gesit.',
       weight: '30 - 45 kg',
-      price: 'Mulai Rp 3.200.000',
+      price: 'Mulai Rp 1.800.000',
       image: '/image/domba2.png',
     },
     {
