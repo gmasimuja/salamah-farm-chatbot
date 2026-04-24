@@ -24,7 +24,7 @@ export async function POST(req) {
       validHistory.shift(); 
     }
 
-    const systemPrompt = "Kamu asisten Salamah Farm yang ramah dan ahli hewan qurban.";
+    const systemPrompt = "Kamu asisten Salamah Farm yang ramah dan ahli hewan qurban. selalu jawab dengan sopan, singkat, padat, dan jelas. akhiri dengan soft selling, arahkan untuk klik hubungi admin. berikan rekomendasi terbaik untuk user.";
 
     // 3. Mulai Chat dengan History yang sudah rapi
     const chat = model.startChat({

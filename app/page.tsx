@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { 
   MessageCircle, 
   MapPin, 
@@ -198,10 +199,25 @@ const Chatbot = () => {
           {/* Messages Area */}
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3">
             {messages.map((msg, idx) => (
-              <div key={idx} className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-[#1F7A63] text-white self-end rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-none'}`}>
-                {msg.text}
+              <div 
+                key={idx} 
+                className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed shadow-sm ${
+                  msg.role === 'user' 
+                    ? 'bg-[#1F7A63] text-white self-end rounded-br-none' 
+                    : 'bg-white border border-gray-200 text-gray-800 self-start rounded-bl-none'
+                }`}
+              >
+                {/* 1. Bungkus dengan div 'prose' agar Tailwind merapikan teksnya */}
+                {/* 2. 'prose-invert' ditambahkan kalau pesan dari user agar tulisan tebal jadi putih */}
+                <div className={`prose prose-sm max-w-none ${msg.role === 'user' ? 'prose-invert' : ''}`}>
+                  <ReactMarkdown>
+                    {msg.text}
+                  </ReactMarkdown>
+                </div>
               </div>
             ))}
+            
+            {/* Loading Animation tetap di sini */}
             {isLoading && (
               <div className="bg-white border border-gray-200 text-gray-500 self-start p-3 rounded-xl rounded-bl-none text-sm flex gap-1 shadow-sm">
                 <span className="animate-bounce">.</span><span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span><span className="animate-bounce" style={{animationDelay: '0.4s'}}>.</span>
