@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
+import { Search, MessageCircle, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
 
 // =========================================================================
 // PASTE LINK CSV GOOGLE SHEET ANDA DI BAWAH INI
@@ -50,6 +50,19 @@ const Logo = ({ inFooter = false }: { inFooter?: boolean }) => (
       e.currentTarget.src = "https://ui-avatars.com/api/?name=SF&background=1F7A63&color=fff";
     }}
   />
+);
+
+const FloatingWA = () => (
+  <a
+    href={getWaLink("Halo Salamah Farm, saya ingin bertanya tentang hewan Qurban.")}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full shadow-2xl transition-transform hover:scale-110 animate-bounce"
+    style={{ backgroundColor: '#25D366', color: 'white' }}
+    aria-label="Hubungi via WhatsApp"
+  >
+    <MessageCircle size={28} />
+  </a>
 );
 
 const Navbar = () => {
@@ -288,6 +301,7 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pt-24 flex flex-col">
       <div className="flex-grow pb-12">
         <Navbar />
+        <FloatingWA />
 
         {/* Header/Hero Section */}
         <header className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 shadow-xl relative overflow-hidden">
