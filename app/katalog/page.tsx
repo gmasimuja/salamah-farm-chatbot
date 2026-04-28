@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera } from 'lucide-react';
+import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
 
 // =========================================================================
 // PASTE LINK CSV GOOGLE SHEET ANDA DI BAWAH INI
@@ -14,7 +14,7 @@ interface Cow {
   kode: string;
   bobot: number;
   harga: number;
-  status: "Tersedia" | "Terjual";
+  status: "Tersedia" | "Terjual" | "Booked";
   pj: string;
   link: string;
 }
@@ -167,12 +167,20 @@ export default function App() {
       });
 
       // Menyusun ulang data sesuai kebutuhan aplikasi dan memastikan tipenya sesuai interface Cow
+      let parsedStatus: "Tersedia" | "Terjual" | "Booked" = "Tersedia";
+      const rawStatus = rowObj.status ? rowObj.status.toLowerCase() : "";
+      if (rawStatus.includes('terjual') || rawStatus === 'sold') {
+        parsedStatus = "Terjual";
+      } else if (rawStatus.includes('book') || rawStatus === 'booking') {
+        parsedStatus = "Booked";
+      }
+
       parsedData.push({
         id: i,
         kode: rowObj.kode || "-",
         bobot: parseInt(rowObj.bobot) || 0,
         harga: parseInt(rowObj.harga) || 0,
-        status: (rowObj.status && rowObj.status.toLowerCase().includes('terjual')) ? "Terjual" : "Tersedia",
+        status: parsedStatus,
         pj: rowObj.pj || "",
         link: rowObj.link || rowObj.media || rowObj.foto || rowObj['link media'] || ""
       });
@@ -230,9 +238,11 @@ export default function App() {
         case 'bobot-desc': return b.bobot - a.bobot;
         case 'harga-asc': return a.harga - b.harga;
         case 'harga-desc': return b.harga - a.harga;
-        case 'status': 
-          if (a.status === b.status) return 0;
-          return a.status === "Tersedia" ? -1 : 1;
+        case 'status': {
+          const order = { "Tersedia": 1, "Booked": 2, "Terjual": 3 };
+          if (order[a.status] === order[b.status]) return a.id - b.id;
+          return order[a.status] - order[b.status];
+        }
         case 'kode-asc':
         default:
           return a.id - b.id;
@@ -245,57 +255,57 @@ export default function App() {
   // Hitung ringkasan
   const totalTersedia = cows.filter(c => c.status === "Tersedia").length;
   const totalTerjual = cows.filter(c => c.status === "Terjual").length;
+  const totalBooked = cows.filter(c => c.status === "Booked").length;
 
   return (
     // Tambahkan pt-24 agar konten tidak tertutup navbar baru yang tingginya h-24
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-12 pt-24">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pt-24 flex flex-col">
       
-      {/* Memasukkan Navbar di atas */}
-      <Navbar />
+      <div className="flex-grow pb-12">
+        {/* Memasukkan Navbar di atas */}
+        <Navbar />
 
-      {/* Header/Hero Section */}
-      <header className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 shadow-xl relative overflow-hidden">
-        {/* Aksen pola transparan opsional untuk kesan profesional */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
-        
-        <div className="max-w-6xl mx-auto px-4 py-8 md:py-10 relative z-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
+        {/* Header/Hero Section */}
+        <header className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 shadow-xl relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
           
-          {/* Tempat Logo */}
-          <div className="bg-white p-1.5 rounded-full shadow-2xl shrink-0 ring-4 ring-green-700/50">
-            <img 
-              src="/logo.jpeg" 
-              alt="Logo Salamah Farm" 
-              className="w-20 h-20 md:w-28 md:h-28 object-contain rounded-full bg-white mix-blend-multiply"
-              onError={(e) => {
-                // Fallback otomatis jika file gambar logo belum ada
-                e.currentTarget.src = "https://ui-avatars.com/api/?name=Salamah+Farm&background=1F7A63&color=fff&size=150&bold=true";
-              }}
-            />
-          </div>
-
-          <div className="text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight drop-shadow-md">
-              Katalog Sapi Qurban
-            </h1>
-            <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-5 drop-shadow-md">
-              SALAMAH FARM SOLO
-            </h2>
+          <div className="max-w-6xl mx-auto px-4 py-8 md:py-10 relative z-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
             
-            <div className="inline-block bg-black/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/10 shadow-lg">
-              <p className="text-sm md:text-base font-semibold text-green-50 tracking-wider flex flex-wrap justify-center md:justify-start gap-2 md:gap-3">
-                <span>✓ GRATIS PERAWATAN</span>
-                <span className="hidden md:inline text-green-400">•</span>
-                <span>✓ FREE ONGKIR</span>
-                <span className="hidden md:inline text-green-400">•</span>
-                <span>✓ BERGARANSI</span>
-              </p>
+            {/* Tempat Logo */}
+            <div className="bg-white p-1.5 rounded-full shadow-2xl shrink-0 ring-4 ring-green-700/50">
+              <img 
+                src="/logo.jpeg" 
+                alt="Logo Salamah Farm" 
+                className="w-20 h-20 md:w-28 md:h-28 object-contain rounded-full bg-white mix-blend-multiply"
+                onError={(e) => {
+                  // Fallback otomatis jika file gambar logo belum ada
+                  e.currentTarget.src = "https://ui-avatars.com/api/?name=Salamah+Farm&background=1F7A63&color=fff&size=150&bold=true";
+                }}
+              />
+            </div>
+
+            <div className="text-center md:text-left">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight drop-shadow-md">
+                Katalog Sapi Qurban
+              </h1>
+              <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-5 drop-shadow-md">
+                SALAMAH FARM GROGOL
+              </h2>
+              
+              <div className="inline-block bg-black/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/10 shadow-lg">
+                <p className="text-sm md:text-base font-semibold text-green-50 tracking-wider flex flex-wrap justify-center md:justify-start gap-2 md:gap-3">
+                  <span>✓ GRATIS PERAWATAN</span>
+                  <span className="hidden md:inline text-green-400">•</span>
+                  <span>✓ FREE ONGKIR</span>
+                  <span className="hidden md:inline text-green-400">•</span>
+                  <span>✓ BERGARANSI</span>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-6xl mx-auto px-4 mt-8">
-        {/* Controls Section */}
+        <main className="max-w-6xl mx-auto px-4 mt-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             
@@ -341,10 +351,14 @@ export default function App() {
           </div>
 
           {/* Stats */}
-          <div className="flex gap-4 border-t border-gray-100 pt-4">
+          <div className="flex gap-4 border-t border-gray-100 pt-4 flex-wrap">
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
               <span className="font-medium text-gray-600">Tersedia: {totalTersedia} Ekor</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <span className="font-medium text-gray-600">Booked: {totalBooked} Ekor</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-red-500"></div>
@@ -372,21 +386,21 @@ export default function App() {
         {/* Catalog Display */}
         {!isLoading && !error && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 text-gray-700 uppercase font-semibold text-xs tracking-wider">
+            <div className="overflow-auto max-h-[70vh]">
+              <table className="w-full text-left text-sm relative">
+                <thead className="sticky top-0 z-20 shadow-sm ring-1 ring-gray-200 text-gray-700 uppercase font-semibold text-xs tracking-wider">
                   <tr>
-                    <th className="px-6 py-4">Kode Sapi</th>
-                    <th className="px-6 py-4">Bobot</th>
-                    <th className="px-6 py-4">Harga Pricelist</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Pembeli (PJ)</th>
-                    <th className="px-6 py-4 text-center">Media</th>
+                    <th className="px-6 py-4 bg-gray-50">Kode Sapi</th>
+                    <th className="px-6 py-4 bg-gray-50">Bobot</th>
+                    <th className="px-6 py-4 bg-gray-50">Harga Pricelist</th>
+                    <th className="px-6 py-4 bg-gray-50">Status</th>
+                    <th className="px-6 py-4 bg-gray-50">Pembeli (PJ)</th>
+                    <th className="px-6 py-4 bg-gray-50 text-center">Media</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredAndSortedCows.map((cow) => (
-                    <tr key={cow.id} className={`hover:bg-gray-50/50 transition-colors ${cow.status === 'Terjual' ? 'bg-red-50/30' : ''}`}>
+                    <tr key={cow.id} className={`hover:bg-gray-50/50 transition-colors ${cow.status === 'Terjual' ? 'bg-red-50/30' : cow.status === 'Booked' ? 'bg-yellow-50/30' : ''}`}>
                       <td className="px-6 py-4 font-bold text-gray-900">
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-200">{cow.kode}</span>
                       </td>
@@ -396,6 +410,10 @@ export default function App() {
                         {cow.status === "Terjual" ? (
                           <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">
                             SOLD
+                          </span>
+                        ) : cow.status === "Booked" ? (
+                          <span className="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                            <Clock className="w-3.5 h-3.5" /> Booked
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
@@ -431,6 +449,61 @@ export default function App() {
           </div>
         )}
       </main>
+      </div>
+
+      {/* 9. FOOTER */}
+      <footer className="bg-gray-900 text-white pt-16 pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            <div>
+              <div className="mb-6 bg-white inline-block p-4 rounded-2xl shadow-xl">
+                <Logo inFooter={true} />
+              </div>
+              <p className="text-gray-400 mb-6 leading-relaxed">
+                Pusat penyedia hewan Qurban terpercaya di Solo Raya. Mengedepankan prinsip Syariah, kualitas, dan pelayanan terbaik untuk kepuasan ibadah Anda.
+              </p>
+            </div>
+            
+            <div>
+              <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Kontak Kami</h4>
+              <ul className="space-y-4 text-gray-400">
+                <li className="flex items-start gap-3">
+                  <MapPin size={20} className="shrink-0 mt-1" style={{ color: COLORS.accent }} />
+                  <span>Masjid Ali Bin Abi Thalib,<br/>Sawah, Sanggrahan, Grogol,<br/>Kab. Sukoharjo, Jawa Tengah 57552</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Phone size={20} className="shrink-0" style={{ color: COLORS.accent }} />
+                  <span>+62 812-1043-4927</span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Lokasi Rumah Qurban</h4>
+              <div className="w-full h-40 bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                <iframe 
+                  src="https://maps.google.com/maps?q=-7.592967682618572,110.80127866441777&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Lokasi Salamah Farm"
+                ></iframe>
+              </div>
+              <a href="https://maps.app.goo.gl/yFhpkq9DoLTNs2Xy6" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-sm hover:text-white transition-colors" style={{ color: COLORS.accent }}>
+                Buka di Google Maps <ArrowRight size={16} />
+              </a>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+            &copy; {new Date().getFullYear()} Rumah Qurban Salamah Farm. All rights reserved.
+          </div>
+        </div>
+      </footer>
+
     </div>
   );
 }
