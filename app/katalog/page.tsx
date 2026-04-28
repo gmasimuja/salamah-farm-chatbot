@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
 
 // =========================================================================
@@ -54,6 +54,37 @@ const Logo = ({ inFooter = false }: { inFooter?: boolean }) => (
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Hanya jalankan auto-hide jika lebar layar adalah mobile (< 768px)
+      if (window.innerWidth < 768) {
+        // Sembunyikan navbar jika scroll ke bawah dan sudah melewati 80px
+        if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+          setIsVisible(false);
+          setIsOpen(false); // Menutup menu mobile jika sedang terbuka
+        } else {
+          // Tampilkan navbar saat scroll ke atas
+          setIsVisible(true);
+        }
+      } else {
+        // Desktop selalu terlihat
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Panggil sekali untuk memastikan state benar saat di-load
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Menggunakan prefix '/' agar dari route /katalog dapat kembali ke page utama (home)
   const navLinks = [
@@ -66,7 +97,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed w-full z-40 top-0 bg-white shadow-sm transition-all duration-300">
+    <nav className={`fixed w-full z-40 top-0 bg-white shadow-sm transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full md:translate-y-0'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-24">
           <div className="flex items-center">
@@ -289,7 +320,7 @@ export default function App() {
                 Katalog Sapi Qurban
               </h1>
               <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-5 drop-shadow-md">
-                SALAMAH FARM GROGOL
+                SALAMAH FARM SOLO
               </h2>
               
               <div className="inline-block bg-black/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/10 shadow-lg">
