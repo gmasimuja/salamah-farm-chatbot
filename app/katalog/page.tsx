@@ -14,7 +14,7 @@ interface Cow {
   kode: string;
   bobot: number;
   harga: number;
-  status: "Tersedia" | "Terjual" | "Booked";
+  status: "Tersedia" | "Terjual" | "Dipesan";
   pj: string;
   link: string;
 }
@@ -162,7 +162,6 @@ const Navbar = () => {
 };
 
 export default function App() {
-  // Menambahkan type annotations pada state
   const [cows, setCows] = useState<Cow[]>([]);
   const [search, setSearch] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("kode-asc");
@@ -180,16 +179,13 @@ export default function App() {
 
   // Fungsi sederhana untuk mem-parsing CSV
   const parseCSV = (csvText: string): Cow[] => {
-    // Memisahkan baris dan mengabaikan baris kosong
     const rows = csvText.split('\n').map(row => row.trim()).filter(row => row);
     if (rows.length < 2) return [];
 
-    // Mengambil header dan mengubahnya menjadi huruf kecil agar seragam
     const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
 
     const parsedData: Cow[] = [];
     for (let i = 1; i < rows.length; i++) {
-      // Memisahkan nilai dengan koma 
       const values = rows[i].split(',').map(v => v.trim());
       const rowObj: Record<string, string> = {};
       
@@ -197,13 +193,14 @@ export default function App() {
         rowObj[header] = values[index] || "";
       });
 
-      // Menyusun ulang data sesuai kebutuhan aplikasi dan memastikan tipenya sesuai interface Cow
-      let parsedStatus: "Tersedia" | "Terjual" | "Booked" = "Tersedia";
+      // Menyesuaikan identifikasi status menjadi Tersedia / Terjual / Dipesan
+      let parsedStatus: "Tersedia" | "Terjual" | "Dipesan" = "Tersedia";
       const rawStatus = rowObj.status ? rowObj.status.toLowerCase() : "";
+      
       if (rawStatus.includes('terjual') || rawStatus === 'sold') {
         parsedStatus = "Terjual";
-      } else if (rawStatus.includes('book') || rawStatus === 'booking') {
-        parsedStatus = "Booked";
+      } else if (rawStatus.includes('book') || rawStatus === 'booking' || rawStatus.includes('pesan')) {
+        parsedStatus = "Dipesan";
       }
 
       parsedData.push({
@@ -224,7 +221,6 @@ export default function App() {
     setIsLoading(true);
     setError(null);
 
-    // Cek jika URL masih link placeholder bawaan template
     if (GOOGLE_SHEET_CSV_URL.includes("GANTI_DENGAN_LINK_ASLI_ANDA")) {
       console.warn("Menggunakan data dummy karena URL Spreadsheet belum diubah.");
       setCows(fallbackCows);
@@ -234,7 +230,9 @@ export default function App() {
     }
 
     try {
-      const response = await fetch(GOOGLE_SHEET_CSV_URL);
+      const response = await fetch(GOOGLE_SHEET_CSV_URL, {
+        cache: 'no-store' // Mencegah browser menyimpan cache tabel yang lama
+      });
       if (!response.ok) throw new Error("Gagal mengambil data dari Spreadsheet");
       
       const csvText = await response.text();
@@ -243,14 +241,12 @@ export default function App() {
     } catch (err) {
       console.error(err);
       setCows(fallbackCows);
-      // Jika link gagal dimuat (CORS/URL salah), tampilkan pesan error & gunakan data contoh
       setError("Gagal memuat data dari Spreadsheet Anda. Menampilkan data contoh. Pastikan link CSV Google Sheet sudah benar dan dipublikasikan (Publish to web).");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Mengambil data saat aplikasi pertama kali dimuat
   useEffect(() => {
     fetchSheetData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -270,7 +266,7 @@ export default function App() {
         case 'harga-asc': return a.harga - b.harga;
         case 'harga-desc': return b.harga - a.harga;
         case 'status': {
-          const order = { "Tersedia": 1, "Booked": 2, "Terjual": 3 };
+          const order = { "Tersedia": 1, "Dipesan": 2, "Terjual": 3 };
           if (order[a.status] === order[b.status]) return a.id - b.id;
           return order[a.status] - order[b.status];
         }
@@ -286,14 +282,11 @@ export default function App() {
   // Hitung ringkasan
   const totalTersedia = cows.filter(c => c.status === "Tersedia").length;
   const totalTerjual = cows.filter(c => c.status === "Terjual").length;
-  const totalBooked = cows.filter(c => c.status === "Booked").length;
+  const totalDipesan = cows.filter(c => c.status === "Dipesan").length;
 
   return (
-    // Tambahkan pt-24 agar konten tidak tertutup navbar baru yang tingginya h-24
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pt-24 flex flex-col">
-      
       <div className="flex-grow pb-12">
-        {/* Memasukkan Navbar di atas */}
         <Navbar />
 
         {/* Header/Hero Section */}
@@ -301,15 +294,12 @@ export default function App() {
           <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
           
           <div className="max-w-6xl mx-auto px-4 py-8 md:py-10 relative z-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-8">
-            
-            {/* Tempat Logo */}
             <div className="bg-white p-1.5 rounded-full shadow-2xl shrink-0 ring-4 ring-green-700/50">
               <img 
                 src="/logo.jpeg" 
                 alt="Logo Salamah Farm" 
                 className="w-20 h-20 md:w-28 md:h-28 object-contain rounded-full bg-white mix-blend-multiply"
                 onError={(e) => {
-                  // Fallback otomatis jika file gambar logo belum ada
                   e.currentTarget.src = "https://ui-avatars.com/api/?name=Salamah+Farm&background=1F7A63&color=fff&size=150&bold=true";
                 }}
               />
@@ -340,7 +330,6 @@ export default function App() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             
-            {/* Search */}
             <div className="relative w-full md:w-1/3">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
@@ -354,7 +343,6 @@ export default function App() {
               />
             </div>
 
-            {/* Filters & Toggles */}
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
               <select
                 className="rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-yellow-400 py-2.5 px-4 text-sm font-medium"
@@ -369,36 +357,40 @@ export default function App() {
                 <option value="status">Status (Tersedia Dahulu)</option>
               </select>
 
-              {/* Refresh Button */}
               <button
                 onClick={fetchSheetData}
                 disabled={isLoading}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Segarkan Data
+                Data Segarkan
               </button>
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats dengan <strong translate="no"> untuk mencegah gangguan Auto-Translate Browser Chrome */}
           <div className="flex gap-4 border-t border-gray-100 pt-4 flex-wrap">
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="font-medium text-gray-600">Tersedia: {totalTersedia} Ekor</span>
+              <span className="font-medium text-gray-600">
+                Tersedia: <strong className="text-gray-900 text-base" translate="no">{totalTersedia}</strong> Ekor
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-              <span className="font-medium text-gray-600">Booked: {totalBooked} Ekor</span>
+              <span className="font-medium text-gray-600">
+                Dipesan: <strong className="text-gray-900 text-base" translate="no">{totalDipesan}</strong> Ekor
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <span className="font-medium text-gray-600">Terjual: {totalTerjual} Ekor</span>
+              <span className="font-medium text-gray-600">
+                Terjual: <strong className="text-gray-900 text-base" translate="no">{totalTerjual}</strong> Ekor
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Status Loading & Error */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-500">
             <RefreshCw className="w-10 h-10 animate-spin text-green-600 mb-4" />
@@ -414,7 +406,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Catalog Display */}
         {!isLoading && !error && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-auto max-h-[70vh]">
@@ -423,7 +414,7 @@ export default function App() {
                   <tr>
                     <th className="px-6 py-4 bg-gray-50">Kode Sapi</th>
                     <th className="px-6 py-4 bg-gray-50">Bobot</th>
-                    <th className="px-6 py-4 bg-gray-50">Harga Pricelist</th>
+                    <th className="px-6 py-4 bg-gray-50">Daftar Harga</th>
                     <th className="px-6 py-4 bg-gray-50">Status</th>
                     <th className="px-6 py-4 bg-gray-50">Pembeli (PJ)</th>
                     <th className="px-6 py-4 bg-gray-50 text-center">Media</th>
@@ -431,18 +422,18 @@ export default function App() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredAndSortedCows.map((cow) => (
-                    <tr key={cow.id} className={`hover:bg-gray-50/50 transition-colors ${cow.status === 'Terjual' ? 'bg-red-50/30' : cow.status === 'Booked' ? 'bg-yellow-50/30' : ''}`}>
+                    <tr key={cow.id} className={`hover:bg-gray-50/50 transition-colors ${cow.status === 'Terjual' ? 'bg-red-50/30' : cow.status === 'Dipesan' ? 'bg-yellow-50/30' : ''}`}>
                       <td className="px-6 py-4 font-bold text-gray-900">
-                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded border border-yellow-200">{cow.kode}</span>
+                        <span className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-md border border-yellow-200">{cow.kode}</span>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-700">{cow.bobot} kg</td>
                       <td className="px-6 py-4 font-bold text-green-700">{formatRupiah(cow.harga)}</td>
                       <td className="px-6 py-4">
                         {cow.status === "Terjual" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                             SOLD
                           </span>
-                        ) : cow.status === "Booked" ? (
+                        ) : cow.status === "Dipesan" ? (
                           <span className="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold">
                             <Clock className="w-3.5 h-3.5" /> Booked
                           </span>
@@ -482,8 +473,7 @@ export default function App() {
       </main>
       </div>
 
-      {/* 9. FOOTER */}
-      <footer className="bg-gray-900 text-white pt-16 pb-8">
+      <footer className="bg-gray-900 text-white pt-16 pb-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
             <div>
