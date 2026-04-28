@@ -66,6 +66,7 @@ const Navbar = () => {
     { name: 'Beranda', href: '#home' },
     { name: 'Tentang Kami', href: '#about' },
     { name: 'Hewan Qurban', href: '#products' },
+    { name: 'Katalog', href: '/katalog' },
     { name: 'Cara Kerja', href: '#how-it-works' },
     { name: 'FAQ', href: '#faq' },
   ];
