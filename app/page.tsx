@@ -324,7 +324,7 @@ export default function App() {
                 Salamah Farm menyediakan Kambing, Domba, dan Sapi qurban terbaik. Dijamin sehat, cukup umur, dan memenuhi syariat untuk kesempurnaan ibadah Anda.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <a href="#products" className="w-full sm:w-auto px-8 py-4 rounded-lg font-bold text-white transition-all hover:shadow-lg hover:-translate-y-1 text-center" style={{ backgroundColor: COLORS.primary }}>
+                <a href="/katalog" className="w-full sm:w-auto px-8 py-4 rounded-lg font-bold text-white transition-all hover:shadow-lg hover:-translate-y-1 text-center" style={{ backgroundColor: COLORS.primary }}>
                   Lihat Hewan Qurban
                 </a>
                 <a href={getWaLink("Assalamu'alaikum, saya ingin info lebih lanjut tentang hewan Qurban di Salamah Farm.")} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 py-4 rounded-lg font-bold transition-all flex items-center justify-center gap-2 border-2 hover:bg-gray-50" style={{ borderColor: COLORS.primary, color: COLORS.primary }}>

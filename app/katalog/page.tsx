@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
+import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock, MessageCircle } from 'lucide-react';
 
 // =========================================================================
 // PASTE LINK CSV GOOGLE SHEET ANDA DI BAWAH INI
@@ -41,6 +41,19 @@ const COLORS = {
 const getWaLink = (message: string) => {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 };
+
+const FloatingWA = () => (
+  <a
+    href={getWaLink("Halo Salamah Farm, saya ingin bertanya tentang hewan Qurban.")}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full shadow-2xl transition-transform hover:scale-110 animate-bounce"
+    style={{ backgroundColor: '#25D366', color: 'white' }}
+    aria-label="Hubungi via WhatsApp"
+  >
+    <MessageCircle size={28} />
+  </a>
+);
 
 const Logo = ({ inFooter = false }: { inFooter?: boolean }) => (
   <img 
@@ -532,6 +545,7 @@ export default function App() {
         </div>
       </footer>
 
+      <FloatingWA />
     </div>
   );
 }
