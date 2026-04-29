@@ -309,6 +309,7 @@ export default function App() {
   const totalTersedia = cows.filter(c => c.status === "Tersedia").length;
   const totalTerjual = cows.filter(c => c.status === "Terjual").length;
   const totalDipesan = cows.filter(c => c.status === "Dipesan").length;
+  const totalSapi = cows.length;
 
   return (
     <div className={`min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col transition-all ${isScreenshotMode ? 'pt-0 pb-28' : 'pt-24 pb-0'}`}>
@@ -410,7 +411,7 @@ export default function App() {
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all bg-yellow-400 text-yellow-900 hover:bg-yellow-500 hover:scale-105 shadow-md"
                   >
                     <Camera className="w-4 h-4" />
-                    Buat Story WA
+                    Ambil Screenshot
                   </button>
                 </div>
               </div>
@@ -418,6 +419,12 @@ export default function App() {
 
             {/* Stats tetap dimunculkan di screenshot untuk info audiens */}
             <div className={`flex gap-4 flex-wrap ${!isScreenshotMode ? 'border-t border-gray-100 pt-4' : ''}`}>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="font-medium text-gray-600">
+                  Total: <strong className="text-gray-900 text-base" translate="no">{totalSapi}</strong> Ekor
+                </span>
+              </div>
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 <span className="font-medium text-gray-600">
@@ -467,7 +474,9 @@ export default function App() {
                       <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Daftar Harga</th>
                       <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Status</th>
                       <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Pembeli (PJ)</th>
-                      <th className="px-6 py-4 bg-gray-50 text-center whitespace-nowrap">Media</th>
+                      {!isScreenshotMode && (
+                        <th className="px-6 py-4 bg-gray-50 text-center whitespace-nowrap">Media</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -495,20 +504,22 @@ export default function App() {
                           )}
                         </td>
                         <td className="px-6 py-4 font-medium text-gray-600">{cow.pj || '-'}</td>
-                        <td className="px-6 py-4 text-center">
-                          {cow.link ? (
-                            <a 
-                              href={cow.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 rounded-lg text-xs font-bold transition-colors border border-green-200"
-                            >
-                              <Camera className="w-3.5 h-3.5" /> Lihat
-                            </a>
-                          ) : (
-                            <span className="text-gray-400 text-xs">-</span>
-                          )}
-                        </td>
+                        {!isScreenshotMode && (
+                          <td className="px-6 py-4 text-center">
+                            {cow.link ? (
+                              <a 
+                                href={cow.link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 rounded-lg text-xs font-bold transition-colors border border-green-200"
+                              >
+                                <Camera className="w-3.5 h-3.5" /> Lihat
+                              </a>
+                            ) : (
+                              <span className="text-gray-400 text-xs">-</span>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
