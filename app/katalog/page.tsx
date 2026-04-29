@@ -75,18 +75,14 @@ const Navbar = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
-      // Hanya jalankan auto-hide jika lebar layar adalah mobile (< 768px)
       if (window.innerWidth < 768) {
-        // Sembunyikan navbar jika scroll ke bawah dan sudah melewati 80px
         if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
           setIsVisible(false);
-          setIsOpen(false); // Menutup menu mobile jika sedang terbuka
+          setIsOpen(false);
         } else {
-          // Tampilkan navbar saat scroll ke atas
           setIsVisible(true);
         }
       } else {
-        // Desktop selalu terlihat
         setIsVisible(true);
       }
 
@@ -94,13 +90,11 @@ const Navbar = () => {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Panggil sekali untuk memastikan state benar saat di-load
     handleScroll();
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Menggunakan prefix '/' agar dari route /katalog dapat kembali ke page utama (home)
   const navLinks = [
     { name: 'Beranda', href: '/' },
     { name: 'Tentang Kami', href: '/#about' },
@@ -118,7 +112,6 @@ const Navbar = () => {
             <a href="/"><Logo /></a>
           </div>
           
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <a key={link.name} href={link.href} className="text-gray-700 hover:text-[#1F7A63] font-medium transition-colors">
@@ -136,7 +129,6 @@ const Navbar = () => {
             </a>
           </div>
 
-          {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
             <button onClick={() => setIsOpen(!isOpen)} className="text-gray-700">
               {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -145,7 +137,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
           <div className="px-4 pt-2 pb-6 space-y-2">
@@ -181,6 +172,9 @@ export default function App() {
   const [sortBy, setSortBy] = useState<string>("kode-asc");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State untuk fitur mode Screenshot / Story WA
+  const [isScreenshotMode, setIsScreenshotMode] = useState<boolean>(false);
 
   // Format Rupiah
   const formatRupiah = (number: number) => {
@@ -191,7 +185,6 @@ export default function App() {
     }).format(number);
   };
 
-  // Fungsi sederhana untuk mem-parsing CSV
   const parseCSV = (csvText: string): Cow[] => {
     const rows = csvText.split('\n').map(row => row.trim()).filter(row => row);
     if (rows.length < 2) return [];
@@ -207,7 +200,6 @@ export default function App() {
         rowObj[header] = values[index] || "";
       });
 
-      // Menyesuaikan identifikasi status menjadi Tersedia / Terjual / Dipesan
       let parsedStatus: "Tersedia" | "Terjual" | "Dipesan" = "Tersedia";
       const rawStatus = rowObj.status ? rowObj.status.toLowerCase() : "";
       
@@ -233,13 +225,11 @@ export default function App() {
     return parsedData;
   };
 
-  // Fungsi untuk mengambil data dari Google Sheet
   const fetchSheetData = async () => {
     setIsLoading(true);
     setError(null);
 
     if (GOOGLE_SHEET_CSV_URL.includes("GANTI_DENGAN_LINK_ASLI_ANDA")) {
-      console.warn("Menggunakan data dummy karena URL Spreadsheet belum diubah.");
       setCows(fallbackCows);
       setError("Anda masih menggunakan data contoh. Silakan ganti variabel GOOGLE_SHEET_CSV_URL di dalam kode dengan link Google Sheet CSV Anda yang asli.");
       setIsLoading(false);
@@ -248,7 +238,7 @@ export default function App() {
 
     try {
       const response = await fetch(GOOGLE_SHEET_CSV_URL, {
-        cache: 'no-store' // Mencegah browser menyimpan cache tabel yang lama
+        cache: 'no-store'
       });
       if (!response.ok) throw new Error("Gagal mengambil data dari Spreadsheet");
       
@@ -269,7 +259,26 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filter dan Sorting logic
+  // Efek khusus untuk Mode Screenshot / Auto Zoom-Out
+  useEffect(() => {
+    let metaViewport = document.querySelector('meta[name=viewport]');
+    if (!metaViewport) {
+      metaViewport = document.createElement('meta');
+      metaViewport.setAttribute('name', 'viewport');
+      document.head.appendChild(metaViewport);
+    }
+
+    if (isScreenshotMode) {
+      // Memaksa browser HP menganggap lebar layar 1000px, sehingga otomatis akan di-zoom out
+      metaViewport.setAttribute('content', 'width=1000, user-scalable=yes');
+      // Scroll perlahan ke atas agar header terlihat di awal screenshot
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Mengembalikan viewport ke setelan mobile friendly normal
+      metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    }
+  }, [isScreenshotMode]);
+
   const filteredAndSortedCows = useMemo(() => {
     let result = [...cows].filter(cow => 
       cow.kode.toLowerCase().includes(search.toLowerCase()) || 
@@ -297,17 +306,27 @@ export default function App() {
     return result;
   }, [cows, search, sortBy]);
 
-  // Hitung ringkasan
   const totalTersedia = cows.filter(c => c.status === "Tersedia").length;
   const totalTerjual = cows.filter(c => c.status === "Terjual").length;
   const totalDipesan = cows.filter(c => c.status === "Dipesan").length;
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pt-24 flex flex-col">
-      <div className="flex-grow pb-12">
-        <Navbar />
+    <div className={`min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col transition-all ${isScreenshotMode ? 'pt-0 pb-28' : 'pt-24 pb-0'}`}>
+      
+      {/* Sembunyikan Navbar saat screenshot mode */}
+      {!isScreenshotMode && <Navbar />}
 
-        {/* Header/Hero Section */}
+      {/* Tombol Melayang untuk Keluar dari Mode Screenshot */}
+      {isScreenshotMode && (
+        <button
+          onClick={() => setIsScreenshotMode(false)}
+          className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[100] flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-full font-bold shadow-2xl transition-transform hover:scale-105 animate-bounce w-[300px] text-lg ring-4 ring-red-300"
+        >
+          <XCircle className="w-6 h-6" /> Kembali ke Tampilan HP
+        </button>
+      )}
+
+      <div className="flex-grow pb-12">
         <header className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 shadow-xl relative overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
           
@@ -345,207 +364,224 @@ export default function App() {
         </header>
 
         <main className="max-w-6xl mx-auto px-4 mt-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-8">
             
-            <div className="relative w-full md:w-1/3">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Cari kode sapi atau nama pembeli..."
-                className="pl-10 w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent py-2.5 transition-all"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            {/* Sembunyikan form pencarian saat mode screenshot */}
+            {!isScreenshotMode && (
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div className="relative w-full md:w-1/3">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Cari kode sapi atau jenis..."
+                    className="pl-10 w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-yellow-400 focus:border-transparent py-2.5 transition-all"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
-              <select
-                className="rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-yellow-400 py-2.5 px-4 text-sm font-medium"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <option value="kode-asc">Urutkan Kode Sapi</option>
-                <option value="bobot-desc">Bobot (Terberat - Teringan)</option>
-                <option value="bobot-asc">Bobot (Teringan - Terberat)</option>
-                <option value="harga-desc">Harga (Tertinggi - Terendah)</option>
-                <option value="harga-asc">Harga (Terendah - Tertinggi)</option>
-                <option value="status">Status (Tersedia Dahulu)</option>
-              </select>
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-end">
+                  <select
+                    className="rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-yellow-400 py-2.5 px-4 text-sm font-medium"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="kode-asc">Urutkan Kode Sapi</option>
+                    <option value="bobot-desc">Bobot (Terberat - Teringan)</option>
+                    <option value="bobot-asc">Bobot (Teringan - Terberat)</option>
+                    <option value="harga-desc">Harga (Tertinggi - Terendah)</option>
+                    <option value="harga-asc">Harga (Terendah - Tertinggi)</option>
+                    <option value="status">Status (Tersedia Dahulu)</option>
+                  </select>
 
-              <button
-                onClick={fetchSheetData}
-                disabled={isLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Data Segarkan
-              </button>
-            </div>
-          </div>
+                  <button
+                    onClick={fetchSheetData}
+                    disabled={isLoading}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    Segarkan Data
+                  </button>
 
-          {/* Stats dengan <strong translate="no"> untuk mencegah gangguan Auto-Translate Browser Chrome */}
-          <div className="flex gap-4 border-t border-gray-100 pt-4 flex-wrap">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span className="font-medium text-gray-600">
-                Tersedia: <strong className="text-gray-900 text-base" translate="no">{totalTersedia}</strong> Ekor
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-              <span className="font-medium text-gray-600">
-                Dipesan: <strong className="text-gray-900 text-base" translate="no">{totalDipesan}</strong> Ekor
-              </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <span className="font-medium text-gray-600">
-                Terjual: <strong className="text-gray-900 text-base" translate="no">{totalTerjual}</strong> Ekor
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-            <RefreshCw className="w-10 h-10 animate-spin text-green-600 mb-4" />
-            <p className="font-medium">Memuat data dari Spreadsheet...</p>
-          </div>
-        )}
-
-        {error && !isLoading && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-            <AlertCircle className="w-12 h-12 mb-3 text-red-500" />
-            <h3 className="text-lg font-bold mb-1">Terjadi Kesalahan</h3>
-            <p className="max-w-md">{error}</p>
-          </div>
-        )}
-
-        {!isLoading && !error && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-auto max-h-[70vh]">
-              <table className="w-full text-left text-sm relative">
-                <thead className="sticky top-0 z-20 shadow-sm ring-1 ring-gray-200 text-gray-700 uppercase font-semibold text-xs tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4 bg-gray-50">Kode Sapi</th>
-                    <th className="px-6 py-4 bg-gray-50">Jenis Sapi</th>
-                    <th className="px-6 py-4 bg-gray-50">Bobot</th>
-                    <th className="px-6 py-4 bg-gray-50">Daftar Harga</th>
-                    <th className="px-6 py-4 bg-gray-50">Status</th>
-                    <th className="px-6 py-4 bg-gray-50">Pembeli (PJ)</th>
-                    <th className="px-6 py-4 bg-gray-50 text-center">Media</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredAndSortedCows.map((cow) => (
-                    <tr key={cow.id} className={`hover:bg-gray-50/50 transition-colors ${cow.status === 'Terjual' ? 'bg-red-50/30' : cow.status === 'Dipesan' ? 'bg-yellow-50/30' : ''}`}>
-                      <td className="px-6 py-4 font-bold text-gray-900">
-                        <span className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-md border border-yellow-200">{cow.kode}</span>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-700">{cow.jenis || '-'}</td>
-                      <td className="px-6 py-4 font-medium text-gray-700">{cow.bobot ? `${cow.bobot} kg` : '-'}</td>
-                      <td className="px-6 py-4 font-bold text-green-700">{formatRupiah(cow.harga)}</td>
-                      <td className="px-6 py-4">
-                        {cow.status === "Terjual" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                            SOLD
-                          </span>
-                        ) : cow.status === "Dipesan" ? (
-                          <span className="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                            <Clock className="w-3.5 h-3.5" /> Booked
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
-                            Tersedia
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-600">{cow.pj || '-'}</td>
-                      <td className="px-6 py-4 text-center">
-                        {cow.link ? (
-                          <a 
-                            href={cow.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 rounded-lg text-xs font-bold transition-colors border border-green-200"
-                          >
-                            <Camera className="w-3.5 h-3.5" /> Lihat
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 text-xs">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {filteredAndSortedCows.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
-                Data tidak ditemukan berdasarkan filter pencarian Anda.
+                  <button
+                    onClick={() => setIsScreenshotMode(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all bg-yellow-400 text-yellow-900 hover:bg-yellow-500 hover:scale-105 shadow-md"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Buat Story WA
+                  </button>
+                </div>
               </div>
             )}
+
+            {/* Stats tetap dimunculkan di screenshot untuk info audiens */}
+            <div className={`flex gap-4 flex-wrap ${!isScreenshotMode ? 'border-t border-gray-100 pt-4' : ''}`}>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="font-medium text-gray-600">
+                  Tersedia: <strong className="text-gray-900 text-base" translate="no">{totalTersedia}</strong> Ekor
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                <span className="font-medium text-gray-600">
+                  Dipesan: <strong className="text-gray-900 text-base" translate="no">{totalDipesan}</strong> Ekor
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span className="font-medium text-gray-600">
+                  Terjual: <strong className="text-gray-900 text-base" translate="no">{totalTerjual}</strong> Ekor
+                </span>
+              </div>
+            </div>
           </div>
-        )}
-      </main>
+
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+              <RefreshCw className="w-10 h-10 animate-spin text-green-600 mb-4" />
+              <p className="font-medium">Memuat data dari Spreadsheet...</p>
+            </div>
+          )}
+
+          {error && !isLoading && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl flex flex-col items-center justify-center text-center">
+              <AlertCircle className="w-12 h-12 mb-3 text-red-500" />
+              <h3 className="text-lg font-bold mb-1">Terjadi Kesalahan</h3>
+              <p className="max-w-md">{error}</p>
+            </div>
+          )}
+
+          {!isLoading && !error && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              {/* Jika mode screenshot aktif, hilangkan batasan overflow-auto dan tinggi maksimal agar HP bisa menangkap seluruh layar panjang */}
+              <div className={isScreenshotMode ? "w-full overflow-visible" : "overflow-auto max-h-[70vh]"}>
+                <table className="w-full text-left text-sm relative">
+                  <thead className={`${!isScreenshotMode ? 'sticky top-0' : ''} z-20 shadow-sm ring-1 ring-gray-200 text-gray-700 uppercase font-semibold text-xs tracking-wider`}>
+                    <tr>
+                      <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Kode Sapi</th>
+                      <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Jenis Sapi</th>
+                      <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Bobot</th>
+                      <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Daftar Harga</th>
+                      <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Status</th>
+                      <th className="px-6 py-4 bg-gray-50 whitespace-nowrap">Pembeli (PJ)</th>
+                      <th className="px-6 py-4 bg-gray-50 text-center whitespace-nowrap">Media</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredAndSortedCows.map((cow) => (
+                      <tr key={cow.id} className={`hover:bg-gray-50/50 transition-colors ${cow.status === 'Terjual' ? 'bg-red-50/30' : cow.status === 'Dipesan' ? 'bg-yellow-50/30' : ''}`}>
+                        <td className="px-6 py-4 font-bold text-gray-900 whitespace-nowrap">
+                          <span className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-md border border-yellow-200">{cow.kode}</span>
+                        </td>
+                        <td className="px-6 py-4 font-medium text-gray-700 whitespace-nowrap">{cow.jenis || '-'}</td>
+                        <td className="px-6 py-4 font-medium text-gray-700 whitespace-nowrap">{cow.bobot ? `${cow.bobot} kg` : '-'}</td>
+                        <td className="px-6 py-4 font-bold text-green-700 whitespace-nowrap">{formatRupiah(cow.harga)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {cow.status === "Terjual" ? (
+                            <span className="inline-flex items-center gap-1.5 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                              SOLD
+                            </span>
+                          ) : cow.status === "Dipesan" ? (
+                            <span className="inline-flex items-center gap-1.5 bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                              <Clock className="w-3.5 h-3.5" /> Booked
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                              Tersedia
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 font-medium text-gray-600">{cow.pj || '-'}</td>
+                        <td className="px-6 py-4 text-center">
+                          {cow.link ? (
+                            <a 
+                              href={cow.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 rounded-lg text-xs font-bold transition-colors border border-green-200"
+                            >
+                              <Camera className="w-3.5 h-3.5" /> Lihat
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 text-xs">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {filteredAndSortedCows.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  Data tidak ditemukan berdasarkan filter pencarian Anda.
+                </div>
+              )}
+            </div>
+          )}
+        </main>
       </div>
 
-      <footer className="bg-gray-900 text-white pt-16 pb-8 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-            <div>
-              <div className="mb-6 bg-white inline-block p-4 rounded-2xl shadow-xl">
-                <Logo inFooter={true} />
-              </div>
-              <p className="text-gray-400 mb-6 leading-relaxed">
-                Pusat penyedia hewan Qurban terpercaya di Solo Raya. Mengedepankan prinsip Syariah, kualitas, dan pelayanan terbaik untuk kepuasan ibadah Anda.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Kontak Kami</h4>
-              <ul className="space-y-4 text-gray-400">
-                <li className="flex items-start gap-3">
-                  <MapPin size={20} className="shrink-0 mt-1" style={{ color: COLORS.accent }} />
-                  <span>Masjid Ali Bin Abi Thalib,<br/>Sawah, Sanggrahan, Grogol,<br/>Kab. Sukoharjo, Jawa Tengah 57552</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone size={20} className="shrink-0" style={{ color: COLORS.accent }} />
-                  <span>+62 812-1043-4927</span>
-                </li>
-              </ul>
-            </div>
+      {/* Sembunyikan Footer dan FloatingWA saat Mode Screenshot agar tidak menutupi tabel */}
+      {!isScreenshotMode && (
+        <>
+          <footer className="bg-gray-900 text-white pt-16 pb-8 mt-auto">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+                <div>
+                  <div className="mb-6 bg-white inline-block p-4 rounded-2xl shadow-xl">
+                    <Logo inFooter={true} />
+                  </div>
+                  <p className="text-gray-400 mb-6 leading-relaxed">
+                    Pusat penyedia hewan Qurban terpercaya di Solo Raya. Mengedepankan prinsip Syariah, kualitas, dan pelayanan terbaik untuk kepuasan ibadah Anda.
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Kontak Kami</h4>
+                  <ul className="space-y-4 text-gray-400">
+                    <li className="flex items-start gap-3">
+                      <MapPin size={20} className="shrink-0 mt-1" style={{ color: COLORS.accent }} />
+                      <span>Masjid Ali Bin Abi Thalib,<br/>Sawah, Sanggrahan, Grogol,<br/>Kab. Sukoharjo, Jawa Tengah 57552</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <Phone size={20} className="shrink-0" style={{ color: COLORS.accent }} />
+                      <span>+62 812-1043-4927</span>
+                    </li>
+                  </ul>
+                </div>
 
-            <div>
-              <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Lokasi Rumah Qurban</h4>
-              <div className="w-full h-40 bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
-                <iframe 
-                  src="https://maps.google.com/maps?q=-7.592967682618572,110.80127866441777&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen 
-                  loading="lazy" 
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Lokasi Salamah Farm"
-                ></iframe>
+                <div>
+                  <h4 className="text-lg font-bold mb-6" style={{ color: COLORS.accent }}>Lokasi Rumah Qurban</h4>
+                  <div className="w-full h-40 bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+                    <iframe 
+                      src="https://maps.google.com/maps?q=-7.592967682618572,110.80127866441777&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                      width="100%" 
+                      height="100%" 
+                      style={{ border: 0 }} 
+                      allowFullScreen 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Lokasi Salamah Farm"
+                    ></iframe>
+                  </div>
+                  <a href="https://maps.app.goo.gl/yFhpkq9DoLTNs2Xy6" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-sm hover:text-white transition-colors" style={{ color: COLORS.accent }}>
+                    Buka di Google Maps <ArrowRight size={16} />
+                  </a>
+                </div>
               </div>
-              <a href="https://maps.app.goo.gl/yFhpkq9DoLTNs2Xy6" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-3 text-sm hover:text-white transition-colors" style={{ color: COLORS.accent }}>
-                Buka di Google Maps <ArrowRight size={16} />
-              </a>
+              
+              <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
+                &copy; {new Date().getFullYear()} Rumah Qurban Salamah Farm. All rights reserved.
+              </div>
             </div>
-          </div>
-          
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Rumah Qurban Salamah Farm. All rights reserved.
-          </div>
-        </div>
-      </footer>
+          </footer>
 
-      <FloatingWA />
+          <FloatingWA />
+        </>
+      )}
     </div>
   );
 }
