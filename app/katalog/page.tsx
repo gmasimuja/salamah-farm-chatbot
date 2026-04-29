@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, MessageCircle, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
+import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock } from 'lucide-react';
 
 // =========================================================================
 // PASTE LINK CSV GOOGLE SHEET ANDA DI BAWAH INI
@@ -12,7 +12,8 @@ const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS
 interface Cow {
   id: number;
   kode: string;
-  bobot: number;
+  jenis: string;
+  bobot: number | null;
   harga: number;
   status: "Tersedia" | "Terjual" | "Dipesan";
   pj: string;
@@ -21,12 +22,12 @@ interface Cow {
 
 // Data dummy untuk fallback jika link belum diganti atau terjadi error
 const fallbackCows: Cow[] = [
-  { id: 1, kode: "156/1", bobot: 265, harga: 18285000, status: "Tersedia", pj: "", link: "" },
-  { id: 2, kode: "176/2", bobot: 396, harga: 27324000, status: "Terjual", pj: "UNIBA", link: "" },
-  { id: 3, kode: "158/3", bobot: 333, harga: 22977000, status: "Tersedia", pj: "", link: "" },
-  { id: 4, kode: "159/4", bobot: 339, harga: 23391000, status: "Tersedia", pj: "", link: "" },
-  { id: 5, kode: "160/5", bobot: 318, harga: 21942000, status: "Terjual", pj: "ALI BIN ABI THOLIB", link: "" },
-  { id: 6, kode: "162/6", bobot: 311, harga: 21459000, status: "Tersedia", pj: "", link: "" }
+  { id: 1, kode: "156/1", jenis: "Limousin", bobot: 265, harga: 18285000, status: "Tersedia", pj: "", link: "" },
+  { id: 2, kode: "176/2", jenis: "Simental", bobot: 396, harga: 27324000, status: "Terjual", pj: "UNIBA", link: "" },
+  { id: 3, kode: "158/3", jenis: "Pegon", bobot: 333, harga: 22977000, status: "Tersedia", pj: "", link: "" },
+  { id: 4, kode: "159/4", jenis: "Brahman", bobot: null, harga: 23391000, status: "Tersedia", pj: "", link: "" },
+  { id: 5, kode: "160/5", jenis: "Limousin", bobot: 318, harga: 21942000, status: "Terjual", pj: "ALI BIN ABI THOLIB", link: "" },
+  { id: 6, kode: "162/6", jenis: "Simental", bobot: 311, harga: 21459000, status: "Tersedia", pj: "", link: "" }
 ];
 
 const WA_NUMBER = "6281210434927"; // Nomor WhatsApp resmi Salamah Farm
@@ -50,19 +51,6 @@ const Logo = ({ inFooter = false }: { inFooter?: boolean }) => (
       e.currentTarget.src = "https://ui-avatars.com/api/?name=SF&background=1F7A63&color=fff";
     }}
   />
-);
-
-const FloatingWA = () => (
-  <a
-    href={getWaLink("Halo Salamah Farm, saya ingin bertanya tentang hewan Qurban.")}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="fixed bottom-6 right-6 z-50 flex items-center justify-center p-4 rounded-full shadow-2xl transition-transform hover:scale-110 animate-bounce"
-    style={{ backgroundColor: '#25D366', color: 'white' }}
-    aria-label="Hubungi via WhatsApp"
-  >
-    <MessageCircle size={28} />
-  </a>
 );
 
 const Navbar = () => {
@@ -216,10 +204,13 @@ export default function App() {
         parsedStatus = "Dipesan";
       }
 
+      const parsedBobot = parseInt(rowObj.bobot);
+
       parsedData.push({
         id: i,
         kode: rowObj.kode || "-",
-        bobot: parseInt(rowObj.bobot) || 0,
+        jenis: rowObj.jenis || rowObj['jenis sapi'] || "",
+        bobot: isNaN(parsedBobot) ? null : parsedBobot,
         harga: parseInt(rowObj.harga) || 0,
         status: parsedStatus,
         pj: rowObj.pj || "",
@@ -269,13 +260,14 @@ export default function App() {
   const filteredAndSortedCows = useMemo(() => {
     let result = [...cows].filter(cow => 
       cow.kode.toLowerCase().includes(search.toLowerCase()) || 
-      cow.pj.toLowerCase().includes(search.toLowerCase())
+      cow.pj.toLowerCase().includes(search.toLowerCase()) ||
+      cow.jenis.toLowerCase().includes(search.toLowerCase())
     );
 
     result.sort((a, b) => {
       switch (sortBy) {
-        case 'bobot-asc': return a.bobot - b.bobot;
-        case 'bobot-desc': return b.bobot - a.bobot;
+        case 'bobot-asc': return (a.bobot || 0) - (b.bobot || 0);
+        case 'bobot-desc': return (b.bobot || 0) - (a.bobot || 0);
         case 'harga-asc': return a.harga - b.harga;
         case 'harga-desc': return b.harga - a.harga;
         case 'status': {
@@ -301,7 +293,6 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pt-24 flex flex-col">
       <div className="flex-grow pb-12">
         <Navbar />
-        <FloatingWA />
 
         {/* Header/Hero Section */}
         <header className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-900 shadow-xl relative overflow-hidden">
@@ -324,7 +315,7 @@ export default function App() {
                 Katalog Sapi Qurban
               </h1>
               <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-5 drop-shadow-md">
-                SALAMAH FARM SOLO
+                SALAMAH FARM GROGOL
               </h2>
               
               <div className="inline-block bg-black/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/10 shadow-lg">
@@ -427,6 +418,7 @@ export default function App() {
                 <thead className="sticky top-0 z-20 shadow-sm ring-1 ring-gray-200 text-gray-700 uppercase font-semibold text-xs tracking-wider">
                   <tr>
                     <th className="px-6 py-4 bg-gray-50">Kode Sapi</th>
+                    <th className="px-6 py-4 bg-gray-50">Jenis Sapi</th>
                     <th className="px-6 py-4 bg-gray-50">Bobot</th>
                     <th className="px-6 py-4 bg-gray-50">Daftar Harga</th>
                     <th className="px-6 py-4 bg-gray-50">Status</th>
@@ -440,7 +432,8 @@ export default function App() {
                       <td className="px-6 py-4 font-bold text-gray-900">
                         <span className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-md border border-yellow-200">{cow.kode}</span>
                       </td>
-                      <td className="px-6 py-4 font-medium text-gray-700">{cow.bobot} kg</td>
+                      <td className="px-6 py-4 font-medium text-gray-700">{cow.jenis || '-'}</td>
+                      <td className="px-6 py-4 font-medium text-gray-700">{cow.bobot ? `${cow.bobot} kg` : '-'}</td>
                       <td className="px-6 py-4 font-bold text-green-700">{formatRupiah(cow.harga)}</td>
                       <td className="px-6 py-4">
                         {cow.status === "Terjual" ? (
