@@ -347,7 +347,7 @@ export default function App() {
                 Katalog Sapi Qurban
               </h1>
               <h2 className="text-xl md:text-2xl font-bold text-yellow-400 mb-5 drop-shadow-md">
-                SALAMAH FARM GROGOL
+                SALAMAH FARM SOLO
               </h2>
               
               <div className="inline-block bg-black/20 backdrop-blur-md px-5 py-2 rounded-full border border-white/10 shadow-lg">
