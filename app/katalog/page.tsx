@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Tag, Scale, CheckCircle2, XCircle, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock, MessageCircle } from 'lucide-react';
+import { Search, RefreshCw, AlertCircle, Menu, X, Camera, MapPin, Phone, ArrowRight, Clock, MessageCircle, Filter, XCircle } from 'lucide-react';
 
 // =========================================================================
 // PASTE LINK CSV GOOGLE SHEET ANDA DI BAWAH INI
@@ -176,6 +176,25 @@ export default function App() {
   // State untuk fitur mode Screenshot / Story WA
   const [isScreenshotMode, setIsScreenshotMode] = useState<boolean>(false);
 
+  // State untuk Filter Checklist
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
+  const [selectedJenis, setSelectedJenis] = useState<string[]>([]);
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
+
+  // Ekstrak Jenis Sapi yang unik dari data
+  const uniqueJenis = useMemo(() => {
+    const jenisSet = new Set(cows.map(cow => cow.jenis).filter(j => j && j.trim() !== ""));
+    return Array.from(jenisSet).sort();
+  }, [cows]);
+
+  // Definisi Range Harga untuk Checklist
+  const PRICE_RANGES = [
+    { id: 'under20', label: 'Di bawah 20 Juta', min: 0, max: 19999999 },
+    { id: '20to25', label: '20 Juta - 25 Juta', min: 20000000, max: 25000000 },
+    { id: 'over25', label: 'Di atas 25 Juta', min: 25000001, max: Infinity }
+  ];
+
   // Format Rupiah
   const formatRupiah = (number: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -280,11 +299,26 @@ export default function App() {
   }, [isScreenshotMode]);
 
   const filteredAndSortedCows = useMemo(() => {
-    let result = [...cows].filter(cow => 
-      cow.kode.toLowerCase().includes(search.toLowerCase()) || 
-      cow.pj.toLowerCase().includes(search.toLowerCase()) ||
-      cow.jenis.toLowerCase().includes(search.toLowerCase())
-    );
+    let result = [...cows].filter(cow => {
+      // 1. Filter Pencarian Text
+      const matchSearch = cow.kode.toLowerCase().includes(search.toLowerCase()) || 
+                          cow.pj.toLowerCase().includes(search.toLowerCase()) ||
+                          cow.jenis.toLowerCase().includes(search.toLowerCase());
+
+      // 2. Filter Checklist Status
+      const matchStatus = selectedStatus.length === 0 || selectedStatus.includes(cow.status);
+
+      // 3. Filter Checklist Jenis
+      const matchJenis = selectedJenis.length === 0 || selectedJenis.includes(cow.jenis);
+
+      // 4. Filter Checklist Range Harga
+      const matchPrice = selectedPriceRanges.length === 0 || selectedPriceRanges.some(rangeId => {
+        const range = PRICE_RANGES.find(r => r.id === rangeId);
+        return range ? (cow.harga >= range.min && cow.harga <= range.max) : false;
+      });
+
+      return matchSearch && matchStatus && matchJenis && matchPrice;
+    });
 
     result.sort((a, b) => {
       switch (sortBy) {
@@ -304,12 +338,13 @@ export default function App() {
     });
 
     return result;
-  }, [cows, search, sortBy]);
+  }, [cows, search, sortBy, selectedStatus, selectedJenis, selectedPriceRanges, PRICE_RANGES]);
 
   const totalTersedia = cows.filter(c => c.status === "Tersedia").length;
   const totalTerjual = cows.filter(c => c.status === "Terjual").length;
   const totalDipesan = cows.filter(c => c.status === "Dipesan").length;
   const totalSapi = cows.length;
+  const filterCount = selectedStatus.length + selectedJenis.length + selectedPriceRanges.length;
 
   return (
     <div className={`min-h-screen bg-gray-50 font-sans text-gray-800 flex flex-col transition-all ${isScreenshotMode ? 'pt-0 pb-28' : 'pt-24 pb-0'}`}>
@@ -398,6 +433,14 @@ export default function App() {
                   </select>
 
                   <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all border ${isFilterOpen || filterCount > 0 ? 'bg-green-600 text-white border-green-700 shadow-md' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-200 shadow-sm'}`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filter {filterCount > 0 ? `(${filterCount})` : ''}
+                  </button>
+
+                  <button
                     onClick={fetchSheetData}
                     disabled={isLoading}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 disabled:opacity-50"
@@ -413,6 +456,94 @@ export default function App() {
                     <Camera className="w-4 h-4" />
                     Ambil Screenshot
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* Panel Filter yang Muncul Saat Diklik */}
+            {!isScreenshotMode && isFilterOpen && (
+              <div className="mb-6 p-5 bg-gray-50/80 border border-gray-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200 shadow-inner">
+                <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                  <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-green-700" /> Filter Data Sapi
+                  </h3>
+                  <button 
+                    onClick={() => {
+                      setSelectedStatus([]);
+                      setSelectedJenis([]);
+                      setSelectedPriceRanges([]);
+                    }}
+                    className="text-sm font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors border border-red-100"
+                  >
+                    Reset Filter
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
+                  {/* Filter Status */}
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-900 mb-3 bg-white px-3 py-1.5 rounded-md shadow-sm border border-gray-100 w-fit">Ketersediaan</h4>
+                    <div className="space-y-3 px-1">
+                      {["Tersedia", "Dipesan", "Terjual"].map(status => (
+                        <label key={status} className="flex items-center gap-3 cursor-pointer group w-fit">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 transition-colors cursor-pointer"
+                            checked={selectedStatus.includes(status)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedStatus([...selectedStatus, status]);
+                              else setSelectedStatus(selectedStatus.filter(s => s !== status));
+                            }}
+                          />
+                          <span className="text-sm text-gray-700 group-hover:text-green-800 font-medium transition-colors">{status}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filter Range Harga */}
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-900 mb-3 bg-white px-3 py-1.5 rounded-md shadow-sm border border-gray-100 w-fit">Range Harga</h4>
+                    <div className="space-y-3 px-1">
+                      {PRICE_RANGES.map(range => (
+                        <label key={range.id} className="flex items-center gap-3 cursor-pointer group w-fit">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 transition-colors cursor-pointer"
+                            checked={selectedPriceRanges.includes(range.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedPriceRanges([...selectedPriceRanges, range.id]);
+                              else setSelectedPriceRanges(selectedPriceRanges.filter(r => r !== range.id));
+                            }}
+                          />
+                          <span className="text-sm text-gray-700 group-hover:text-green-800 font-medium transition-colors">{range.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Filter Jenis Sapi */}
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-900 mb-3 bg-white px-3 py-1.5 rounded-md shadow-sm border border-gray-100 w-fit">Jenis Sapi</h4>
+                    <div className="space-y-3 max-h-[140px] overflow-y-auto pr-2 px-1">
+                      {uniqueJenis.length > 0 ? uniqueJenis.map(jenis => (
+                        <label key={jenis} className="flex items-center gap-3 cursor-pointer group w-fit">
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 transition-colors cursor-pointer"
+                            checked={selectedJenis.includes(jenis)}
+                            onChange={(e) => {
+                              if (e.target.checked) setSelectedJenis([...selectedJenis, jenis]);
+                              else setSelectedJenis(selectedJenis.filter(j => j !== jenis));
+                            }}
+                          />
+                          <span className="text-sm text-gray-700 group-hover:text-green-800 font-medium transition-colors">{jenis}</span>
+                        </label>
+                      )) : (
+                        <p className="text-sm text-gray-500 italic">Belum ada data jenis</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -463,7 +594,6 @@ export default function App() {
 
           {!isLoading && !error && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Jika mode screenshot aktif, hilangkan batasan overflow-auto dan tinggi maksimal agar HP bisa menangkap seluruh layar panjang */}
               <div className={isScreenshotMode ? "w-full overflow-visible" : "overflow-auto max-h-[70vh]"}>
                 <table className="w-full text-left text-sm relative">
                   <thead className={`${!isScreenshotMode ? 'sticky top-0' : ''} z-20 shadow-sm ring-1 ring-gray-200 text-gray-700 uppercase font-semibold text-xs tracking-wider`}>
@@ -535,7 +665,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* Sembunyikan Footer dan FloatingWA saat Mode Screenshot agar tidak menutupi tabel */}
       {!isScreenshotMode && (
         <>
           <footer className="bg-gray-900 text-white pt-16 pb-8 mt-auto">
